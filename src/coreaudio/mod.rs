@@ -713,7 +713,6 @@ impl EventLoop {
         if let BufferSize::Fixed(size) = &buffer_size {
             let size = *size as u32;
             audio_unit.set_property(kAudioDevicePropertyBufferFrameSize, scope, element, Some(&size))?;
-            println!("setting buffer size {}", size);
         }
 
         // Determine the future ID of the stream.
