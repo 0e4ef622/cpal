@@ -41,6 +41,7 @@ use self::coreaudio::sys::{
     AudioStreamBasicDescription,
     AudioValueRange,
     kAudioDevicePropertyAvailableNominalSampleRates,
+    kAudioDevicePropertyBufferFrameSize,
     kAudioDevicePropertyDeviceNameCFString,
     kAudioDevicePropertyNominalSampleRate,
     kAudioObjectPropertyScopeInput,
@@ -698,8 +699,6 @@ impl EventLoop {
         buffer_size: &mut BufferSize,
     ) -> Result<StreamId, CreationError>
     {
-        *buffer_size = BufferSize::Default; // afaik there's no way to get the buffer size beforehand and it can change
-
         let mut audio_unit = audio_unit_from_device(device, false)?;
 
         // The scope and element for working with a device's output stream.
@@ -709,6 +708,12 @@ impl EventLoop {
         // Set the stream in interleaved mode.
         let asbd = asbd_from_format(format);
         audio_unit.set_property(kAudioUnitProperty_StreamFormat, scope, element, Some(&asbd))?;
+
+        // Set the buffer size
+        if let BufferSize::Fixed(size) = &buffer_size {
+            let size = *size as u32;
+            audio_unit.set_property(kAudioDevicePropertyBufferFrameSize, scope, element, Some(&size))?;
+        }
 
         // Determine the future ID of the stream.
         let stream_id = self.next_stream_id();
